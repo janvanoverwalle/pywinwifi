@@ -1,5 +1,5 @@
 # pywinwifi
-A Wi-Fi uility tool for Windows.
+A Wi-Fi utility tool for Windows.
 
 ## Environment setup
 Use `pip install -r requirements.txt` to install the required packages.
