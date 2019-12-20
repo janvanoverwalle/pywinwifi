@@ -424,12 +424,16 @@ def create_parser(prog_name=None):
 
 def main():
     parser = create_parser()
-    args = parser.parse_args()
-    # print(vars(args))
 
     if len(sys.argv) == 1:
         parser.print_usage()
         sys.exit(1)
+    if sys.argv[1] == '?':
+        parser.print_help()
+        sys.exit()
+
+    args = parser.parse_args()
+    # print(vars(args))
 
     exec_func = None
     if args.status:
