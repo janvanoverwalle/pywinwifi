@@ -5,4 +5,4 @@ A Wi-Fi utility tool for Windows.
 Use `pip install -r requirements.txt` to install the required packages.
 
 ## Execution
-Run `python pywinfifi.py ?` in a terminal to get started.
+Run `python pywinwifi.py ?` in a terminal to get started.
