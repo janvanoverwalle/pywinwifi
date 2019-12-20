@@ -319,10 +319,10 @@ def _str_to_bool(s):
     return s.lower() not in ('false', 'f', '0', 'no', 'n')
 
 
-def do_get_connected_ap(verbose=False):
+def do_get_connected_ap(verbosity=0):
     networks = get_connected_ap()
     for n in networks:
-        if not verbose:
+        if not verbosity:
             s = [f'SSID: {n.ssid} ({n.state})']
         else:
             s = [
@@ -334,17 +334,21 @@ def do_get_connected_ap(verbose=False):
         print(os.linesep.join(s))
 
 
-def do_scan_networks(ssid, verbose=False):
+def do_scan_networks(ssid, verbosity=0):
     networks = scan_networks(ssid)
     for n in networks:
-        print(n.network_str())
-        if verbose:
+        if verbosity == 0:
+            print(n.ssid)
+        if verbosity >= 1:
+            print(n.network_str())
+        if verbosity >= 2:
             print(n.bsss_str())
-        print()
+        if verbosity > 0:
+            print()
 
 
-def do_get_ap_history(verbose=False):
-    if not verbose:
+def do_get_ap_history(verbosity=0):
+    if not verbosity:
         return get_ap_history()
     output = []
     stdout = get_ap_history(callback=lambda x: output.append(x))
@@ -416,9 +420,10 @@ def create_parser(prog_name=None):
                         default=0,
                         metavar='SECONDS',
                         help='repetition interval')
-    parser.add_argument('-v', '--verbose',
-                        action='store_true',
-                        help='increase output verbosity')
+    parser.add_argument('-v', '--verbosity',
+                        type=int,
+                        default=0,
+                        help='increase output verbosity [0-2]')
     return parser
 
 
@@ -435,12 +440,13 @@ def main():
     args = parser.parse_args()
     # print(vars(args))
 
+    args.verbosity = max(0, args.verbosity)  # Clamp the verbosity between [0,x]
     exec_func = None
     if args.status:
-        exec_func = lambda: do_get_connected_ap(args.verbose)
+        exec_func = lambda: do_get_connected_ap(args.verbosity)
     elif args.scan:
         ssid = args.scan if isinstance(args.scan, str) else None
-        exec_func = lambda: do_scan_networks(ssid, args.verbose)
+        exec_func = lambda: do_scan_networks(ssid, args.verbosity)
     elif args.connect:
         ssid = args.connect[0]
         password = args.connect[1] if len(args.connect) > 1 else ''
@@ -451,7 +457,7 @@ def main():
     elif args.disconnect:
         exec_func = disconnect_ap
     elif args.history:
-        exec_func = lambda: do_get_ap_history(args.verbose)
+        exec_func = lambda: do_get_ap_history(args.verbosity)
     elif args.forget:
         if isinstance(args.forget, (list, tuple)):
             fargs = args.forget
