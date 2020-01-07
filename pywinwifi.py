@@ -476,8 +476,10 @@ def main():
             output = (output,)
         for o in output:
             print(o)
-        if args.interval and i < args.repeat-1:
-            time.sleep(args.interval)
+        if i < args.repeat-1:
+            print('-' * 32)
+            if args.interval:
+                time.sleep(args.interval)
 
 
 if __name__ == '__main__':
