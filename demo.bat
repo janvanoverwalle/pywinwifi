@@ -4,41 +4,51 @@
 
 @cls
 %CMD% --help
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --scan
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --scan %SSID%
-@goto :eof
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --history
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --history -v 1
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --forget %SSID%
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --history -v 1
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --scan %SSID%
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --scan %SSID% -v 1
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --scan %SSID% -v 2
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --status
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --status -v 1
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --connect %SSID% %PASSWD%
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --status
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --history
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --disconnect
-@call :sleep 5
+@call :err_or_sleep
 %CMD% --status --repeat 3 --interval 3
-@call :sleep 5
+@call :err_or_sleep
 @exit /b %ERRORLEVEL%
+
+:err_or_sleep
+@if errorlevel 1 (
+   @exit /b %ERRORLEVEL%
+)
+@set /a t=5
+@if not [%~1] == [] (
+    @set /a t=%~1
+)
+@call :sleep %t%
+@exit /b 0
 
 :sleep
 @set /a n=%~1+1

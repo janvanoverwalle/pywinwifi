@@ -1,2 +1,2 @@
 win32wifi==0.1.0
-winwifi==1.0.0
+winwifi==1.0.3

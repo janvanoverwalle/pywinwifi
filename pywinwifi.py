@@ -215,16 +215,16 @@ def connect_ap(ssid, password='', remember=False):
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
     except:
-        return 0
-    return 1
+        return False
+    return True
 
 
 def disconnect_ap():
     try:
         WinWiFi.disconnect()
     except:
-        return 0
-    return 1
+        return False
+    return True
 
 
 def get_ap_history(callback=lambda x: None):
@@ -238,8 +238,8 @@ def forget_aps(*ssids):
     try:
         WinWiFi.forget(*ssids)
     except:
-        return 0
-    return 1
+        return False
+    return True
 
 
 def scan_networks(ssid=None):
@@ -340,6 +340,17 @@ def _get_parsed_ap_history():
             continue
         ssid_profile_map[line] = profile_name
     return ssid_profile_map
+
+
+def do_interval(value, verbosity=0):
+    if not value:
+        if verbosity:
+            print('No execution interval specified')
+        return
+    if verbosity:
+        s = '' if value == 1 else 's'
+        print(f'Delaying execution for {value} second{s}')
+    time.sleep(value)
 
 
 def do_get_connected_ap(verbosity=0):
@@ -497,6 +508,9 @@ def main():
         return
 
     for i in range(args.repeat):
+        if args.verbosity:
+            width = len(str(args.repeat))
+            print(f'Executing iteration {i+1:>{width}}/{args.repeat}')
         output = exec_func()
         if output is None:
             output = tuple()
@@ -505,8 +519,7 @@ def main():
         for o in output:
             print(o)
         if i < args.repeat-1:
-            if args.interval:
-                time.sleep(args.interval)
+            do_interval(args.interval, args.verbosity)
             print('-' * 32)
 
 
