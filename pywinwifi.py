@@ -215,16 +215,16 @@ def connect_ap(ssid, password='', remember=False):
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
     except:
-        return False
-    return True
+        return 0
+    return 1
 
 
 def disconnect_ap():
     try:
         WinWiFi.disconnect()
     except:
-        return False
-    return True
+        return 0
+    return 1
 
 
 def get_ap_history(callback=lambda x: None):
@@ -238,8 +238,8 @@ def forget_aps(*ssids):
     try:
         WinWiFi.forget(*ssids)
     except:
-        return False
-    return True
+        return 0
+    return 1
 
 
 def scan_networks(ssid=None):
@@ -283,6 +283,11 @@ def scan_networks(ssid=None):
         if not isinstance(ssid, bytes):
             ssid = str(ssid).encode('utf-8')
         available_networks = [n for n in available_networks if n.ssid == ssid]
+    for n in available_networks:
+        try:
+            n.ssid = n.ssid.decode('utf-8')
+        except UnicodeDecodeError:
+            pass
     return available_networks
 
 
@@ -319,6 +324,24 @@ def _str_to_bool(s):
     return s.lower() not in ('false', 'f', '0', 'no', 'n')
 
 
+def _get_parsed_ap_history():
+    output = do_get_ap_history(1)
+    profile_name = None
+    next_is_profile = True
+    ssid_profile_map = {}
+    for line in output.splitlines():
+        line = line.strip()
+        if not line:
+            next_is_profile = True
+            continue
+        if next_is_profile:
+            profile_name = line[:-1]
+            next_is_profile = False
+            continue
+        ssid_profile_map[line] = profile_name
+    return ssid_profile_map
+
+
 def do_get_connected_ap(verbosity=0):
     networks = get_connected_ap()
     for n in networks:
@@ -336,9 +359,14 @@ def do_get_connected_ap(verbosity=0):
 
 def do_scan_networks(ssid, verbosity=0):
     networks = scan_networks(ssid)
+    history = _get_parsed_ap_history() if verbosity == 0 else {}
     for n in networks:
         if verbosity == 0:
-            print(n.ssid)
+            if n.profile_name and n.ssid in history:
+                profile = f' ({history[n.ssid]})'
+            else:
+                profile = ''
+            print(f'{n.ssid}{profile}')
         if verbosity >= 1:
             print(n.network_str())
         if verbosity >= 2:
@@ -470,16 +498,16 @@ def main():
 
     for i in range(args.repeat):
         output = exec_func()
-        if not output:
+        if output is None:
             output = tuple()
         elif not isinstance(output, (list, tuple)):
             output = (output,)
         for o in output:
             print(o)
         if i < args.repeat-1:
-            print('-' * 32)
             if args.interval:
                 time.sleep(args.interval)
+            print('-' * 32)
 
 
 if __name__ == '__main__':
