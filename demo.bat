@@ -1,37 +1,42 @@
+@set CMD=python pywinwifi.py
+@set SSID=Eurofins-Guest
+@set PASSWD=4kIyEM:J-/
+
 @cls
-python pywinwifi.py --help
+%CMD% --help
 @call :sleep 5
-python pywinwifi.py --scan
+%CMD% --scan
 @call :sleep 5
-python pywinwifi.py --scan Eurofins-Guest
+%CMD% --scan %SSID%
+@goto :eof
 @call :sleep 5
-python pywinwifi.py --history
+%CMD% --history
 @call :sleep 5
-python pywinwifi.py --history -v 1
+%CMD% --history -v 1
 @call :sleep 5
-python pywinwifi.py --forget Eurofins-Guest
+%CMD% --forget %SSID%
 @call :sleep 5
-python pywinwifi.py --history -v 1
+%CMD% --history -v 1
 @call :sleep 5
-python pywinwifi.py --scan Eurofins-Guest
+%CMD% --scan %SSID%
 @call :sleep 5
-python pywinwifi.py --scan Eurofins-Guest -v 1
+%CMD% --scan %SSID% -v 1
 @call :sleep 5
-python pywinwifi.py --scan Eurofins-Guest -v 2
+%CMD% --scan %SSID% -v 2
 @call :sleep 5
-python pywinwifi.py --status
+%CMD% --status
 @call :sleep 5
-python pywinwifi.py --status -v 1
+%CMD% --status -v 1
 @call :sleep 5
-python pywinwifi.py --connect Eurofins-Guest 4kIyEM:J-/
+%CMD% --connect %SSID% %PASSWD%
 @call :sleep 5
-python pywinwifi.py --status
+%CMD% --status
 @call :sleep 5
-python pywinwifi.py --history
+%CMD% --history
 @call :sleep 5
-python pywinwifi.py --disconnect
+%CMD% --disconnect
 @call :sleep 5
-python pywinwifi.py --status --repeat 3 --interval 3
+%CMD% --status --repeat 3 --interval 3
 @call :sleep 5
 @exit /b %ERRORLEVEL%
 
