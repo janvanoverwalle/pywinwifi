@@ -1,10 +1,12 @@
 import argparse
+import json
 import os
 import queue
 import sys
 import threading
 import time
 
+from logger import Logger
 from win32wifi.Win32Wifi import *
 from winwifi import WinWiFi
 
@@ -140,6 +142,10 @@ class ExtWirelessNetwork(WirelessNetwork):
     def network_str(self):
         return super().__str__().strip()
 
+    def network_json(self):
+        split_lines = [l.split(':', 1) for l in self.network_str().splitlines()]
+        return {s[0].strip():s[1].strip() for s in split_lines}
+
     def bsss_str(self):
         s = []
         for idx, bss in enumerate(self.bsss):
@@ -156,6 +162,23 @@ class ExtWirelessNetwork(WirelessNetwork):
             channels = delim.join(map(str, bss.channels))
             s.append(f'\tChannel{plural}: {channels}')
         return os.linesep.join(s)
+
+    def bsss_json(self):
+        l = []
+        for bss in self.bsss:
+            d = {
+                'MAC': bss.bssid,
+                'Band': f'{bss.band} GHz',
+                'Signal': f'{bss.rssi} dBm'
+            }
+            if bss.channels and bss.channels[0]:
+                delim = ''
+                if len(bss.channels) > 1:
+                    delim = '+' if bss.channels[0] < bss.channels[1] else '-'
+                channels = delim.join(map(str, bss.channels))
+                d['Channel'] = channels
+            l.append(d)
+        return {'BSSID': l}
 
 
 def _wlan_get_interfaces(state=None):
@@ -195,6 +218,8 @@ def _wlan_scan_interface(interface, timeout=10):
         exit_event.set()
     notification_thread.join()
 
+    return res
+
 
 def get_connected_ap():
     try:
@@ -212,6 +237,7 @@ def scan_aps(callback=lambda x: None):
 
 
 def connect_ap(ssid, password='', remember=False):
+    Logger.info(f'Connecting to SSId: {ssid}')
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
     except:
@@ -220,6 +246,7 @@ def connect_ap(ssid, password='', remember=False):
 
 
 def disconnect_ap():
+    Logger.info('Disconnecting')
     try:
         WinWiFi.disconnect()
     except:
@@ -235,6 +262,7 @@ def get_ap_history(callback=lambda x: None):
 
 
 def forget_aps(*ssids):
+    Logger.info('Forgetting APs')
     try:
         WinWiFi.forget(*ssids)
     except:
@@ -270,9 +298,10 @@ def scan_networks(ssid=None):
                     d_ssid = bss.ssid.decode('utf-8')
                 except UnicodeDecodeError:
                     d_ssid = ''
-                error_msg = f'No matching network found for SSID "{bss.ssid}"'
+                error_msg = f'No matching network(s) found for SSID "{bss.ssid}"'
                 if d_ssid:
                     error_msg += f' ("{d_ssid}")'
+                Logger.error(error_msg)
                 print(error_msg, file=sys.stderr)
                 continue
 
@@ -324,6 +353,10 @@ def _str_to_bool(s):
     return s.lower() not in ('false', 'f', '0', 'no', 'n')
 
 
+def _dict_to_str(d, sep=os.linesep):
+    return sep.join(f'{k}:{v}' for k,v in d.items())
+
+
 def _get_parsed_ap_history():
     output = do_get_ap_history(1)
     profile_name = None
@@ -345,56 +378,78 @@ def _get_parsed_ap_history():
 def do_interval(value, verbosity=0):
     if not value:
         if verbosity:
+            Logger.info('No execution interval specified')
             print('No execution interval specified')
         return
     if verbosity:
         s = '' if value == 1 else 's'
+        Logger.info(f'Delaying execution for {value} second{s}')
         print(f'Delaying execution for {value} second{s}')
     time.sleep(value)
 
 
 def do_get_connected_ap(verbosity=0):
+    Logger.info('Retrieving connected AP info')
     networks = get_connected_ap()
     for n in networks:
         if not verbosity:
-            s = [f'SSID: {n.ssid} ({n.state})']
+            s = {'SSID': f'{n.ssid} ({n.state})'}
         else:
-            s = [
-                f'Interface: {n.name}',
-                f'SSID: {n.ssid}',
-                f'State: {n.state}',
-                f'BSSID: {n.bssid}'
-            ]
-        print(os.linesep.join(s))
+            s = {
+                'Interface': f'{n.name}',
+                'SSID': f'{n.ssid}',
+                'State': f'{n.state}',
+                'BSSID': f'{n.bssid}'
+            }
+        Logger.info(f'JSON:{s}')
+        print(_dict_to_str(s))
 
 
 def do_scan_networks(ssid, verbosity=0):
+    Logger.info('Scanning for networks')
     networks = scan_networks(ssid)
     history = _get_parsed_ap_history() if verbosity == 0 else {}
+
+    json_data = []
     for n in networks:
+        log_msg = []
         if verbosity == 0:
             if n.profile_name and n.ssid in history:
                 profile = f' ({history[n.ssid]})'
             else:
                 profile = ''
-            print(f'{n.ssid}{profile}')
+            json_data.append(f'{n.ssid}{profile}')
+            log_msg.append(f'{n.ssid}{profile}')
+        log_data = {}
         if verbosity >= 1:
-            print(n.network_str())
+            log_data.update(n.network_json())
+            log_msg.append(n.network_str())
         if verbosity >= 2:
-            print(n.bsss_str())
+            log_data.update(n.bsss_json())
+            log_msg.append('\n'.join(l for l in n.bsss_str().splitlines() if l.strip()))
         if verbosity > 0:
-            print()
+            log_msg.append('')
+        if log_data:
+            json_data.append(log_data)
+        log_msg = '\n'.join(log_msg)
+        print(log_msg)
+    Logger.info(f'JSON:{json_data}')
 
 
 def do_get_ap_history(verbosity=0):
+    Logger.info('Retrieving AP history')
     if not verbosity:
-        return get_ap_history()
+        hist = get_ap_history()
+        Logger.info(f'JSON:{hist}')
+        return os.linesep.join(hist)
     output = []
     stdout = get_ap_history(callback=lambda x: output.append(x))
     if not output:
         return stdout
     new_output = []
-    prev_line = None
+    json_data = {}
+    prev_line = ''
+    prev_key = None
     do_append = True
     for line in output[0].splitlines():
         if not line:
@@ -405,14 +460,18 @@ def do_get_ap_history(verbosity=0):
             idx = prev_line.find('(')
             if idx + 1:
                 prev_line = prev_line[:idx-1]
-            new_output.append(f'{prev_line.strip()}:')
+            prev_key = prev_line.strip()
+            new_output.append(f'{prev_key}:')
+            json_data[prev_key] = []
             do_append = True
         elif do_append:
             idx = line.find(':')
             if idx + 1:
                 line = line[idx+1:]
             new_output.append(f'\t{line.strip()}')
+            json_data[prev_key].append(line.strip())
         prev_line = line
+    Logger.info(f'JSON:{json_data}')
     return os.linesep.join(new_output).strip()
 
 
@@ -476,6 +535,8 @@ def main():
         parser.print_help()
         sys.exit()
 
+    Logger.info(f'{__file__} {" ".join(sys.argv[1:])}')
+
     args = parser.parse_args()
     # print(vars(args))
 
@@ -510,18 +571,21 @@ def main():
     for i in range(args.repeat):
         if args.verbosity:
             width = len(str(args.repeat))
-            print(f'Executing iteration {i+1:>{width}}/{args.repeat}')
+            it_str = f'Executing iteration {i+1:>{width}}/{args.repeat}'
+            Logger.info(it_str)
+            print(it_str)
         output = exec_func()
-        if output is None:
-            output = tuple()
-        elif not isinstance(output, (list, tuple)):
-            output = (output,)
-        for o in output:
-            print(o)
+        if output:
+            # Logger.info(output)
+            print(output)
         if i < args.repeat-1:
             do_interval(args.interval, args.verbosity)
             print('-' * 32)
+        Logger.info('=' * 64)
 
 
 if __name__ == '__main__':
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y-%m-%d')
+    Logger._configure_logger(filename=f'{timestamp}.log', append=True)
     main()
