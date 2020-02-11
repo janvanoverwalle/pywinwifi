@@ -2,41 +2,53 @@
 @set SSID=Eurofins-Guest
 @set PASSWD=4kIyEM:J-/
 
-@cls
-%CMD% --help
-@call :err_or_sleep
-%CMD% --scan
-@call :err_or_sleep
-%CMD% --scan %SSID%
-@call :err_or_sleep
-%CMD% --history
-@call :err_or_sleep
-%CMD% --history -v 1
-@call :err_or_sleep
-%CMD% --forget %SSID%
-@call :err_or_sleep
-%CMD% --history -v 1
-@call :err_or_sleep
-%CMD% --scan %SSID%
-@call :err_or_sleep
-%CMD% --scan %SSID% -v 1
-@call :err_or_sleep
-%CMD% --scan %SSID% -v 2
-@call :err_or_sleep
-%CMD% --status
-@call :err_or_sleep
-%CMD% --status -v 1
-@call :err_or_sleep
-%CMD% --connect %SSID% %PASSWD%
-@call :err_or_sleep
-%CMD% --status
-@call :err_or_sleep
-%CMD% --history
-@call :err_or_sleep
-%CMD% --disconnect
-@call :err_or_sleep
-%CMD% --status --repeat 3 --interval 3
-@call :err_or_sleep
+@set /a iterations=1
+@if not [%1] == [] (
+  @set /a iterations=%1
+)
+
+@if exist logs ( rd /s /q logs )
+@mkdir logs
+
+@for /l %%x in (1, 1, %iterations%) do (
+  @cls
+  @echo Iteration %%x of %iterations%
+
+  ::%CMD% --help
+  ::@call :err_or_sleep
+  %CMD% --scan
+  @call :err_or_sleep
+  %CMD% --scan %SSID%
+  @call :err_or_sleep
+  %CMD% --history
+  @call :err_or_sleep
+  %CMD% --history -v 1
+  @call :err_or_sleep
+  %CMD% --forget %SSID%
+  @call :err_or_sleep
+  %CMD% --history -v 1
+  @call :err_or_sleep
+  %CMD% --scan %SSID%
+  @call :err_or_sleep
+  %CMD% --scan %SSID% -v 1
+  @call :err_or_sleep
+  %CMD% --scan %SSID% -v 2
+  @call :err_or_sleep
+  %CMD% --status
+  @call :err_or_sleep
+  %CMD% --status -v 1
+  @call :err_or_sleep
+  %CMD% --connect %SSID% %PASSWD%
+  @call :err_or_sleep
+  %CMD% --status
+  @call :err_or_sleep
+  %CMD% --history
+  @call :err_or_sleep
+  %CMD% --disconnect
+  @call :err_or_sleep
+  %CMD% --status --repeat 3 --interval 3
+  @call :err_or_sleep
+)
 @exit /b %ERRORLEVEL%
 
 :err_or_sleep
