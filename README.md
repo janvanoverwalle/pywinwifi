@@ -4,11 +4,15 @@ A Wi-Fi utility tool for Windows.
 ## Environment setup
 Use `pip install -r requirements.txt` to install the required packages.
 
+### Dependencies
+ - [win32wifi](https://github.com/kedos/win32wifi) by [kedos](https://github.com/kedos)
+ - [winwifi.py](https://github.com/changyuheng/winwifi.py) by [changyuheng](https://github.com/changyuheng)
+
 ### Issues
 At time of writing, there are a couple of issues with the `win32wifi` package that need to be resolved. See [this issue](https://github.com/kedos/win32wifi/pull/8) for more information.
 
 #### Hotfix
-Go to your Python environments `site-packages` folder and locate the `win32wifi` folder. Open `Win32Wifi.py`  in your preferred text editor and look for the class `WirelessNetworkBss`.
+Go to your Python environment's `site-packages` folder and locate the `win32wifi` folder. Open `Win32Wifi.py`  in your preferred text editor and look for the class `WirelessNetworkBss`.
 
 Add the following line to the class' `__init__` method, before the `__process_information_elements` methods.
  - `self.ch_center_frequency = bss_entry.ChCenterFrequency`
@@ -47,7 +51,3 @@ To enable file logging make sure that a folder named `logs` exists in the curren
 Individual commands are prefixed with a `CMD` tag. Following these is usually one (or more) command descriptions. These are in turn followed by the command output in JSON format, prefixed by a `JSON`tag.
 
 _Note_: The `verbosity` argument also effects the logging output.
-
-## Dependencies
- - [win32wifi](https://github.com/kedos/win32wifi) by [kedos](https://github.com/kedos)
- - [winwifi.py](https://github.com/changyuheng/winwifi.py) by [changyuheng](https://github.com/changyuheng)
