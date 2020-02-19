@@ -237,21 +237,25 @@ def scan_aps(callback=lambda x: None):
 
 
 def connect_ap(ssid, password='', remember=False):
-    Logger.info(f'Connecting to SSId: {ssid}')
+    Logger.info(f'Connecting to SSID: {ssid}')
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
+        ret = True
     except:
-        return False
-    return True
+        ret = False
+    Logger.info(f'JSON:{_to_json({"result": ret})}')
+    return ret
 
 
 def disconnect_ap():
     Logger.info('Disconnecting')
     try:
         WinWiFi.disconnect()
+        ret = True
     except:
-        return False
-    return True
+        ret = False
+    Logger.info(f'JSON:{_to_json({"result": ret})}')
+    return ret
 
 
 def get_ap_history(callback=lambda x: None):
@@ -262,12 +266,16 @@ def get_ap_history(callback=lambda x: None):
 
 
 def forget_aps(*ssids):
-    Logger.info('Forgetting APs')
+    ssid_str = ', '.join(ssids) if ssids else ''
+    ssid_str = f' ({ssid_str})' if ssid_str else ssid_str
+    Logger.info(f'Forgetting APs{ssid_str}')
     try:
         WinWiFi.forget(*ssids)
+        ret = True
     except:
-        return False
-    return True
+        ret = False
+    Logger.info(f'JSON:{_to_json({"result": ret})}')
+    return ret
 
 
 def scan_networks(ssid=None):
@@ -545,9 +553,14 @@ def main():
         parser.print_help()
         sys.exit()
 
-    Logger.info(f'CMD:{__file__} {" ".join(sys.argv[1:])}')
+    Logger.info(f'CMD:{os.path.basename(__file__)} {" ".join(sys.argv[1:])}')
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        Logger.error('Invalid or incomplete argument')
+        Logger.info('=' * 64)
+        raise
     # print(vars(args))
 
     args.verbosity = max(0, args.verbosity)  # Clamp the verbosity between [0,x]
@@ -585,9 +598,12 @@ def main():
             Logger.info(it_str)
             print(it_str)
         output = exec_func()
-        if output:
+        if output is not None:
             # Logger.info(output)
-            print(output)
+            if isinstance(output, bool):
+                print('Success' if output else 'Error')
+            else:
+                print(output)
         if i < args.repeat-1:
             do_interval(args.interval, args.verbosity)
             print('-' * 32)

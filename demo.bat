@@ -1,6 +1,6 @@
 @set CMD=python pywinwifi.py
-@set SSID=Eurofins-Guest
-@set PASSWD=4kIyEM:J-/
+@set SSID=<ssid>
+@set PASSWD=<passwd>
 
 @set /a iterations=1
 @if not [%1] == [] (
