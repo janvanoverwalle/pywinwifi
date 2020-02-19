@@ -46,7 +46,7 @@ class Logger(object):
         console_handler = logging.StreamHandler()
         console_handler.setLevel(kwargs.get('console_level', kwargs.get('level', logging.WARNING)))
 
-        default_log_format = '%(asctime)s - %(moduleinfo)18s - %(levelname)7s - %(message)s'
+        default_log_format = '%(asctime)s - %(moduleinfo)17s - %(levelname)7s - %(message)s'
         file_format = kwargs.get('file_format', kwargs.get('format', default_log_format))
         file_handler.setFormatter(logging.Formatter(file_format))
         console_format = kwargs.get('console_format', kwargs.get('format', default_log_format))
@@ -88,14 +88,14 @@ class Logger(object):
             caller = inspect.stack()[stack_index]
             caller_module = inspect.getmodule(caller[0])
 
-            while caller_module.__name__ == __name__:
+            while caller_module.__file__ == __file__:
                 stack_index += 1
                 caller = inspect.stack()[stack_index]
                 caller_module = inspect.getmodule(caller[0])
 
             line_nr = inspect.getlineno(caller[0])
-            module_name = caller_module.__name__.split('.')[-1]
-            module_info = '{0}.py:{1:>4}'.format(module_name, line_nr)
+            module_name = os.path.basename(caller_module.__file__)
+            module_info = '{0}:{1:>4}'.format(module_name, line_nr)
         except:
             module_info = 'unknown'
 

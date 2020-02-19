@@ -357,8 +357,14 @@ def _dict_to_str(d, sep=os.linesep):
     return sep.join(f'{k}:{v}' for k,v in d.items())
 
 
+def _to_json(data):
+    if isinstance(data, str):
+        data = json.loads(data)
+    return json.dumps(data)
+
+
 def _get_parsed_ap_history():
-    output = do_get_ap_history(1)
+    output = do_get_ap_history(1, log=False)
     profile_name = None
     next_is_profile = True
     ssid_profile_map = {}
@@ -401,7 +407,7 @@ def do_get_connected_ap(verbosity=0):
                 'State': f'{n.state}',
                 'BSSID': f'{n.bssid}'
             }
-        Logger.info(f'JSON:{s}')
+        Logger.info(f'JSON:{_to_json(s)}')
         print(_dict_to_str(s))
 
 
@@ -433,14 +439,17 @@ def do_scan_networks(ssid, verbosity=0):
             json_data.append(log_data)
         log_msg = '\n'.join(log_msg)
         print(log_msg)
-    Logger.info(f'JSON:{json_data}')
+    Logger.info(f'JSON:{_to_json(json_data)}')
 
 
-def do_get_ap_history(verbosity=0):
-    Logger.info('Retrieving AP history')
+def do_get_ap_history(verbosity=0, **kwargs):
+    do_log = kwargs.get('log', True)
+    if do_log:
+        Logger.info('Retrieving AP history')
     if not verbosity:
         hist = get_ap_history()
-        Logger.info(f'JSON:{hist}')
+        if do_log:
+            Logger.info(f'JSON:{_to_json(hist)}')
         return os.linesep.join(hist)
     output = []
     stdout = get_ap_history(callback=lambda x: output.append(x))
@@ -471,7 +480,8 @@ def do_get_ap_history(verbosity=0):
             new_output.append(f'\t{line.strip()}')
             json_data[prev_key].append(line.strip())
         prev_line = line
-    Logger.info(f'JSON:{json_data}')
+    if do_log:
+        Logger.info(f'JSON:{_to_json(json_data)}')
     return os.linesep.join(new_output).strip()
 
 
@@ -535,7 +545,7 @@ def main():
         parser.print_help()
         sys.exit()
 
-    Logger.info(f'{__file__} {" ".join(sys.argv[1:])}')
+    Logger.info(f'CMD:{__file__} {" ".join(sys.argv[1:])}')
 
     args = parser.parse_args()
     # print(vars(args))
