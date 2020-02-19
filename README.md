@@ -12,16 +12,18 @@ Use `pip install -r requirements.txt` to install the required packages.
 At time of writing, there are a couple of issues with the `win32wifi` package that need to be resolved. See [this issue](https://github.com/kedos/win32wifi/pull/8) for more information.
 
 #### Hotfix
-Go to your Python environment's `site-packages` folder and locate the `win32wifi` folder. Open `Win32Wifi.py`  in your preferred text editor and look for the class `WirelessNetworkBss`.
+Either execute `hotfix.bat` or follow the steps below.
 
-Add the following line to the class' `__init__` method, before the `__process_information_elements` methods.
- - `self.ch_center_frequency = bss_entry.ChCenterFrequency`
+ 1. Go to your Python environment's `site-packages` folder and locate the `win32wifi` folder. Open `Win32Wifi.py`  in your preferred text editor and look for the class `WirelessNetworkBss`.
 
-Next go to the same class' `__process_information_elements` method and edit the following lines:
- - Change the `raw_information_elements` instantiation from empty string to empty list.\
- i.e. `self.raw_information_elements = []`
- - Change the `raw_information_elements` string concatenation of bytes to an append.\
- i.e. `self.raw_information_elements.append(byte)`
+ 2. Add the following line to the class' `__init__` method, before the `__process_information_elements` methods.
+   - `self.ch_center_frequency = bss_entry.ChCenterFrequency`
+
+ 3. Next go to the same class' `__process_information_elements` method and edit the following lines:
+   - Change the `raw_information_elements` instantiation from empty string to empty list.\
+   i.e. `self.raw_information_elements = []`
+   - Change the `raw_information_elements` string concatenation of bytes to an append.\
+   i.e. `self.raw_information_elements.append(byte)`
 
 ## Execution
 Run `python pywinwifi.py ?` in a terminal to get started.
