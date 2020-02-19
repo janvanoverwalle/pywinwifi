@@ -1,4 +1,5 @@
 
+
 # pywinwifi
 A Wi-Fi utility tool for Windows.
 
@@ -32,3 +33,7 @@ To enable file logging make sure that a folder named `logs` exists in the curren
 Individual commands are prefixed with a `CMD` tag. Following these is usually one (or more) command descriptions. These are in turn followed by the command output in JSON format, prefixed by a `JSON`tag.
 
 _Note_: The `verbosity` argument also effects the logging output.
+
+## Dependencies
+- [win32wifi](https://github.com/kedos/win32wifi) by [kedos](https://github.com/kedos)
+- [winwifi.py](https://github.com/changyuheng/winwifi.py) by [changyuheng](https://github.com/changyuheng)
