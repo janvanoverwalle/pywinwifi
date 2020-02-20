@@ -8,19 +8,33 @@ def main():
     output = subprocess.check_output(['where', 'python'], universal_newlines=True)
     python_location = output.splitlines()[0]
     python_directory = os.path.dirname(python_location)
-    win32wifi_location = os.path.join(python_directory, 'Lib', 'site-packages', 'win32wifi', 'Win32Wifi.py')
 
-    if not os.path.exists(win32wifi_location):
-        print(f'No such file or directory: "{win32wifi_location}"', file=sys.stderr)
+    path = os.path.join(python_directory, 'Lib', 'site-packages')
+    if not os.path.exists(path):
+        print(f'No such file or directory: "{path}"', file=sys.stderr)
         sys.exit(1)
+    # print('Python environment located')
+
+    path = os.path.join(path, 'win32wifi')
+    if not os.path.exists(path):
+        print(f'No such package: "{os.path.basename(path)}". Make sure it is installed.', file=sys.stderr)
+        sys.exit(1)
+    # print('Package located')
+
+    path = os.path.join(path, 'Win32Wifi.py')
+    if not os.path.exists(path):
+        print(f'No such file: "{os.path.basename(path)}" in "{os.path.dirname(path)}"', file=sys.stderr)
+        sys.exit(1)
+    # print('File located')
 
     contents = None
-    with open(win32wifi_location) as in_file:
+    with open(path) as in_file:
         contents = in_file.readlines()
 
     if not contents:
-        print(f'No such file or empty file: "{win32wifi_location}"', file=sys.stderr)
+        print(f'Empty file: "{os.path.basename(path)}"', file=sys.stderr)
         sys.exit(1)
+    # print('File contents read')
 
     hotfixes_applied = 0
     hotfixes_already_applied = 0
@@ -78,17 +92,17 @@ def main():
         if hotfixes_applied + hotfixes_already_applied == 3:
             break
     else:
-        print('Not all hotfixes have been applied', file=sys.stderr)
+        print('One or more hotfixes have not been applied', file=sys.stderr)
         sys.exit(1)
 
     if hotfixes_already_applied == 3:
         print('Hotfixes have already been succesfully applied')
-        sys.exit(0)
+        return
 
-    with open(win32wifi_location, 'w') as out_file:
+    with open(path, 'w') as out_file:
         out_file.write(''.join(new_contents))
 
-    print(f'Hotfixes ({hotfixes_applied}) have been succesfully applied')
+    print(f'Hotfixes have been succesfully applied')
 
 
 if __name__ == '__main__':
