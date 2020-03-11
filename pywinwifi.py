@@ -236,25 +236,31 @@ def scan_aps(callback=lambda x: None):
         return []
 
 
-def connect_ap(ssid, password='', remember=False):
+def connect_ap(ssid, password='', remember=False, **kwargs):
     Logger.info(f'Connecting to SSID: {ssid}')
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
         ret = True
     except:
         ret = False
-    Logger.info(f'JSON:{_to_json({"result": ret})}')
+    json_data = _to_json({'result': ret})
+    Logger.info(f'JSON:{json_data}')
+    if kwargs.get('json'):
+        return json_data
     return ret
 
 
-def disconnect_ap():
+def disconnect_ap(**kwargs):
     Logger.info('Disconnecting')
     try:
         WinWiFi.disconnect()
         ret = True
     except:
         ret = False
-    Logger.info(f'JSON:{_to_json({"result": ret})}')
+    json_data = _to_json({'result': ret})
+    Logger.info(f'JSON:{json_data}')
+    if kwargs.get('json'):
+        return json_data
     return ret
 
 
@@ -265,7 +271,7 @@ def get_ap_history(callback=lambda x: None):
         return []
 
 
-def forget_aps(*ssids):
+def forget_aps(*ssids, **kwargs):
     ssid_str = ', '.join(ssids) if ssids else ''
     ssid_str = f' ({ssid_str})' if ssid_str else ssid_str
     Logger.info(f'Forgetting APs{ssid_str}')
@@ -274,7 +280,10 @@ def forget_aps(*ssids):
         ret = True
     except:
         ret = False
-    Logger.info(f'JSON:{_to_json({"result": ret})}')
+    json_data = _to_json({'result': ret})
+    Logger.info(f'JSON:{json_data}')
+    if kwargs.get('json'):
+        return json_data
     return ret
 
 
@@ -402,7 +411,7 @@ def do_interval(value, verbosity=0):
     time.sleep(value)
 
 
-def do_get_connected_ap(verbosity=0):
+def do_get_connected_ap(verbosity=0, **kwargs):
     Logger.info('Retrieving connected AP info')
     networks = get_connected_ap()
     for n in networks:
@@ -415,11 +424,15 @@ def do_get_connected_ap(verbosity=0):
                 'State': f'{n.state}',
                 'BSSID': f'{n.bssid}'
             }
-        Logger.info(f'JSON:{_to_json(s)}')
-        print(_dict_to_str(s))
+        json_data = _to_json(s)
+        Logger.info(f'JSON:{json_data}')
+        if kwargs.get('json'):
+            print(json_data)
+        else:
+            print(_dict_to_str(s))
 
 
-def do_scan_networks(ssid, verbosity=0):
+def do_scan_networks(ssid, verbosity=0, **kwargs):
     Logger.info('Scanning for networks')
     networks = scan_networks(ssid)
     history = _get_parsed_ap_history() if verbosity == 0 else {}
@@ -446,8 +459,12 @@ def do_scan_networks(ssid, verbosity=0):
         if log_data:
             json_data.append(log_data)
         log_msg = '\n'.join(log_msg)
-        print(log_msg)
+        if not kwargs.get('json'):
+            print(log_msg)
+    json_data = _to_json(json_data)
     Logger.info(f'JSON:{_to_json(json_data)}')
+    if kwargs.get('json'):
+        print(json_data)
 
 
 def do_get_ap_history(verbosity=0, **kwargs):
@@ -490,6 +507,8 @@ def do_get_ap_history(verbosity=0, **kwargs):
         prev_line = line
     if do_log:
         Logger.info(f'JSON:{_to_json(json_data)}')
+    if kwargs.get('json'):
+        return _to_json(json_data)
     return os.linesep.join(new_output).strip()
 
 
@@ -536,6 +555,10 @@ def create_parser(prog_name=None):
                         default=0,
                         metavar='SECONDS',
                         help='repetition interval')
+    parser.add_argument('-j', '--json',
+                        dest='as_json',
+                        action='store_true',
+                        help='format all output as JSON')
     parser.add_argument('-v', '--verbosity',
                         type=int,
                         default=0,
@@ -566,27 +589,28 @@ def main():
     args.verbosity = max(0, args.verbosity)  # Clamp the verbosity between [0,x]
     exec_func = None
     if args.status:
-        exec_func = lambda: do_get_connected_ap(args.verbosity)
+        exec_func = lambda: do_get_connected_ap(args.verbosity, json=args.as_json)
     elif args.scan:
         ssid = args.scan if isinstance(args.scan, str) else None
-        exec_func = lambda: do_scan_networks(ssid, args.verbosity)
+        exec_func = lambda: do_scan_networks(ssid, args.verbosity, json=args.as_json)
     elif args.connect:
         ssid = args.connect[0]
         password = args.connect[1] if len(args.connect) > 1 else ''
         remember = args.connect[2] if len(args.connect) > 2 else False
         exec_func = lambda: connect_ap(ssid,
                                        password=password,
-                                       remember=_str_to_bool(remember))
+                                       remember=_str_to_bool(remember),
+                                       json=args.as_json)
     elif args.disconnect:
-        exec_func = disconnect_ap
+        exec_func = lambda: disconnect_ap(json=args.as_json)
     elif args.history:
-        exec_func = lambda: do_get_ap_history(args.verbosity)
+        exec_func = lambda: do_get_ap_history(args.verbosity, json=args.as_json)
     elif args.forget:
         if isinstance(args.forget, (list, tuple)):
             fargs = args.forget
         else:
             fargs = (args.forget,)
-        exec_func = lambda: forget_aps(*fargs)
+        exec_func = lambda: forget_aps(*fargs, json=args.as_json)
 
     if not exec_func:
         return
