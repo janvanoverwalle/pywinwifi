@@ -40,11 +40,12 @@ The `help` or `?` argument displays a summary of all the available commands and 
  - `forget`: Deletes all stored information about a saved AP. When provided with optional SSID parameters, only the information pertaining to those SSIDs will be deleted.
 
 ### Modifiers
-These arguments don't do anything by themselves and have to be combined with any of the functional argument.
+These arguments don't do anything by themselves and have to be combined with any of the functional arguments.
 
  - `repeat`: Repeats the corresponding argument by the provided amount.
  - `interval`/`timeout`: Introduces a timeout after the corresponding argument has been performed. Usually used in combination with the `repeat` argument.\
  _Note_: When no repeat amount is provided or after the last repeat iteration, the timeout will be ignored.
+ - `json`: Formats all (standard) output to the JSON format for easy parsing.
  - `verbosity`: Increase the output verbosity. There are 3 levels of verbosity, each of them only adding additional output with regards the previous level.
 
 ## Logging
