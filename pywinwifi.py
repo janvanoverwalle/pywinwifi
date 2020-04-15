@@ -13,7 +13,7 @@ from winwifi import WinWiFi
 
 class WlanNotificationThread(threading.Thread):
     def __init__(self, state, exit_event=None):
-        super().__init__()
+        super().__init__(name='NotificationThread')
         self.notification_state = str(state)
         self.exit_event = exit_event
         self._thread_lock = threading.Lock()
@@ -28,20 +28,21 @@ class WlanNotificationThread(threading.Thread):
     def run(self):
         self._register_callback()
 
-        while True:
-            if self.exit_event and self.exit_event.isSet():
-                break
-            self._lock()
-            if self._work_queue.empty():
-                self._unlock()
-            else:
-                obj = self._work_queue.get()
-                self._unlock()
-                if str(obj) == self._notification_state:
+        try:
+            while True:
+                if self.exit_event and self.exit_event.isSet():
                     break
-            time.sleep(.5)
-
-        self._unregister_callback()
+                self._lock()
+                if self._work_queue.empty():
+                    self._unlock()
+                else:
+                    obj = self._work_queue.get()
+                    self._unlock()
+                    if str(obj) == self._notification_state:
+                        break
+                time.sleep(.5)
+        finally:
+            self._unregister_callback()
 
     def _lock(self):
         self._thread_lock.acquire()
