@@ -9,7 +9,7 @@ Use `pip install -r requirements.txt` to install the required packages.
  - [winwifi.py](https://github.com/changyuheng/winwifi.py) by [changyuheng](https://github.com/changyuheng)
 
 ### Issues
-At time of writing (11-03-2020), there are a couple of issues with the `win32wifi` package that need to be resolved. See [this issue](https://github.com/kedos/win32wifi/pull/8) for more information.
+At time of writing (Mar 11, 2020), there are a couple of issues with the `win32wifi` package that need to be resolved. See [this issue](https://github.com/kedos/win32wifi/pull/8) for more information.
 
 #### Hotfix
 Either execute `hotfix.bat` or follow the steps below.
