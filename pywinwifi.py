@@ -479,7 +479,7 @@ def do_get_ap_history(verbosity=0, **kwargs):
     output = []
     stdout = get_ap_history(callback=lambda x: output.append(x))
     if not output:
-        return stdout
+        return os.linesep.join(stdout) if isinstance(stdout, list) else str(stdout)
     new_output = []
     json_data = {}
     prev_line = ''
