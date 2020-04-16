@@ -37,6 +37,12 @@ class WlanNotificationThread(threading.Thread):
                     self._unlock()
                 else:
                     obj = self._work_queue.get()
+
+                    try:
+                        Logger.debug(obj)
+                    except:
+                        Logger.debug('unknown wlan_notification')
+
                     self._unlock()
                     if str(obj) == self._notification_state:
                         break
@@ -403,6 +409,7 @@ def do_interval(value, verbosity=0):
     if not value:
         if verbosity:
             Logger.info('No execution interval specified')
+        if verbosity >= 2:
             print('No execution interval specified')
         return
     if verbosity:
@@ -581,13 +588,19 @@ def main():
 
     try:
         args = parser.parse_args()
-    except SystemExit:
-        Logger.error('Invalid or incomplete argument')
-        Logger.info('=' * 64)
+    except SystemExit as se_ex:
+        if se_ex.code > 0:
+            Logger.error('Invalid or incomplete argument')
+            Logger.info('=' * 64)
         raise
     # print(vars(args))
 
     args.verbosity = max(0, args.verbosity)  # Clamp the verbosity between [0,x]
+    if args.verbosity > 2:
+        warning_msg = f'verbosity level {args.verbosity} not supported, assuming max level (2)'
+        print(f'{__file__}: warning: {warning_msg}')
+        Logger.warning(warning_msg)
+        args.verbosity = 2
     exec_func = None
     if args.status:
         exec_func = lambda: do_get_connected_ap(args.verbosity, json=args.as_json)
@@ -620,8 +633,9 @@ def main():
         if args.verbosity:
             width = len(str(args.repeat))
             it_str = f'Executing iteration {i+1:>{width}}/{args.repeat}'
+            if args.repeat > 1 or args.verbosity >= 2:
+                print(it_str)
             Logger.info(it_str)
-            print(it_str)
         output = exec_func()
         if output is not None:
             # Logger.info(output)
@@ -638,5 +652,5 @@ def main():
 if __name__ == '__main__':
     from datetime import datetime
     timestamp = datetime.now().strftime('%Y-%m-%d')
-    Logger._configure_logger(filename=f'{timestamp}.log', append=True)
+    Logger._configure_logger(console=None, filename=f'{timestamp}.log', append=True)
     main()

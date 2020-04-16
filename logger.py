@@ -54,10 +54,12 @@ class Logger(object):
 
         cls._logger = logging.getLogger(__name__)
         cls._logger.setLevel(kwargs.get('level', logging.DEBUG))
-        cls._logger.addHandler(file_handler)
-        cls._handlers.append(file_handler)
-        cls._logger.addHandler(console_handler)
-        cls._handlers.append(console_handler)
+        if kwargs.get('file', True):
+            cls._logger.addHandler(file_handler)
+            cls._handlers.append(file_handler)
+        if kwargs.get('console', True):
+            cls._logger.addHandler(console_handler)
+            cls._handlers.append(console_handler)
 
     @classmethod
     def enable(cls, enabled=True):
