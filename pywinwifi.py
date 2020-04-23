@@ -244,7 +244,12 @@ def scan_aps(callback=lambda x: None):
 
 
 def connect_ap(ssid, password='', remember=False, **kwargs):
-    Logger.info(f'Connecting to SSID: {ssid}')
+    log_msg = (
+        f'Connecting to SSID: {ssid}'
+        f' (Password: {password})' if password else ''
+        f' (remembering)' if remember else ''
+    )
+    Logger.info(log_msg)
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
         ret = True
@@ -422,6 +427,14 @@ def do_interval(value, verbosity=0):
 def do_get_connected_ap(verbosity=0, **kwargs):
     Logger.info('Retrieving connected AP info')
     networks = get_connected_ap()
+    if not networks:
+        s = {'State': 'disconnected'}
+        json_data = _to_json(s)
+        Logger.info(f'JSON:{json_data}')
+        if kwargs.get('json'):
+            print(json_data)
+        else:
+            print(_dict_to_str(s))
     for n in networks:
         if not verbosity:
             s = {'SSID': f'{n.ssid} ({n.state})'}
