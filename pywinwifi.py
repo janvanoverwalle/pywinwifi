@@ -244,19 +244,21 @@ def scan_aps(callback=lambda x: None):
 
 
 def connect_ap(ssid, password='', remember=False, **kwargs):
-    log_msg = (
-        f'Connecting to SSID: {ssid}'
-        f' (Password: {password})' if password else ''
-        f' (remembering)' if remember else ''
-    )
+    log_msg = f'Connecting to SSID: {ssid}'
+    if password:
+        log_msg = f'{log_msg} (Password: {password})'
+    if remember:
+        log_msg = f'{log_msg} (remembering)'
+
     Logger.info(log_msg)
     try:
         WinWiFi.connect(ssid=ssid, passwd=password, remember=remember)
         ret = True
-    except:
+        json_data = _to_json({'result': ret, 'message': None})
+    except Exception as ex:
         ret = False
-    json_data = _to_json({'result': ret})
-    Logger.info(f'JSON:{json_data}')
+        json_data = _to_json({'result': ret, 'message': str(ex)})
+    (Logger.info if ret else Logger.error)(f'JSON:{json_data}')
     if kwargs.get('json'):
         return json_data
     return ret
@@ -267,10 +269,11 @@ def disconnect_ap(**kwargs):
     try:
         WinWiFi.disconnect()
         ret = True
-    except:
+        json_data = _to_json({'result': ret, 'message': None})
+    except Exception as ex:
         ret = False
-    json_data = _to_json({'result': ret})
-    Logger.info(f'JSON:{json_data}')
+        json_data = _to_json({'result': ret, 'message': str(ex)})
+    (Logger.info if ret else Logger.error)(f'JSON:{json_data}')
     if kwargs.get('json'):
         return json_data
     return ret
@@ -290,10 +293,12 @@ def forget_aps(*ssids, **kwargs):
     try:
         WinWiFi.forget(*ssids)
         ret = True
-    except:
+        json_data = _to_json({'result': ret, 'message': None})
+    except Exception as ex:
         ret = False
+        json_data = _to_json({'result': ret, 'message': str(ex)})
     json_data = _to_json({'result': ret})
-    Logger.info(f'JSON:{json_data}')
+    (Logger.info if ret else Logger.error)(f'JSON:{json_data}')
     if kwargs.get('json'):
         return json_data
     return ret
@@ -383,7 +388,7 @@ def _str_to_bool(s):
 
 
 def _dict_to_str(d, sep=os.linesep):
-    return sep.join(f'{k}:{v}' for k,v in d.items())
+    return sep.join(f'{k}:{v}' for k, v in d.items())
 
 
 def _to_json(data):
@@ -597,7 +602,8 @@ def main():
         parser.print_help()
         sys.exit()
 
-    Logger.info(f'CMD:{os.path.basename(__file__)} {" ".join(sys.argv[1:])}')
+    arg_list = [f'"{a}"' if ' ' in a else a for a in sys.argv[1:]]
+    Logger.info(f'CMD:{os.path.basename(__file__)} {" ".join(arg_list)}')
 
     try:
         args = parser.parse_args()
@@ -665,5 +671,5 @@ def main():
 if __name__ == '__main__':
     from datetime import datetime
     timestamp = datetime.now().strftime('%Y-%m-%d')
-    Logger._configure_logger(console=None, filename=f'{timestamp}.log', append=True)
+    Logger._configure_logger(console=None, filename=f'{timestamp}.log', append=True, level=20)
     main()
