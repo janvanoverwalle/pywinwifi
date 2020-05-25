@@ -1,4 +1,6 @@
 import io
+import json
+import locale
 import os
 import pkgutil
 import subprocess
@@ -38,6 +40,21 @@ class WLAN_INTERFACE_INFO_LIST(Structure):
         ("dwIndex", DWORD),
         ("InterfaceInfo", WLAN_INTERFACE_INFO * 1)
     ]
+
+
+class WinUILanguage:
+    _map = None
+
+    @classmethod
+    def detect(cls):
+        lang = locale.windows_locale[windll.kernel32.GetUserDefaultUILanguage()]
+        cls._map = json.loads(pkgutil.get_data(__package__, os.path.join(locale, lang)).decode())
+
+    @classmethod
+    def get(cls, key):
+        if not cls._map:
+            cls.detect()
+        return cls._map[key.lower()]
 
 
 class WindllWlanApi:
@@ -91,7 +108,7 @@ class WindllWlanApi:
 class WinWiFi:
     @classmethod
     def get_profile_template(cls) -> str:
-        return pkgutil.get_data(__package__, 'data/profile-template.xml').decode()
+        return pkgutil.get_data(__package__, os.path.join('data', 'profile-template.xml')).decode()
 
     @classmethod
     def netsh(cls, args: List[str], timeout: int = 3, check: bool = True) -> subprocess.CompletedProcess:
@@ -122,7 +139,7 @@ class WinWiFi:
 
         # (invalid_char, replace_by)
         invalid_chars = [
-            ('&', '&amp;'),  # Has to be checked first
+            ('&', '&amp;'),  # &-char has to be checked first
             ('"', '&quot;'),
             ('\'', '&apos;'),
             ('<', '&lt;'),
@@ -182,13 +199,13 @@ class WinWiFi:
 
         cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'networks', 'mode=bssid'])
         callback(cp.stdout)
-        return list(map(WiFiAp.parse_netsh, [out for out in cp.stdout.split('\n\n') if out.startswith('SSID')]))
+        return list(map(WiFiAp.parse_netsh, [out for out in cp.stdout.split('\n\n') if out.startswith(WinUILanguage.get('SSID'))]))
 
     @classmethod
     def get_interfaces(cls) -> List['WiFiInterface']:
         cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'interfaces'])
         return list(map(WiFiInterface.parse_netsh,
-                        [out for out in cp.stdout.split('\n\n') if out.startswith('    Name')]))
+                        [out for out in cp.stdout.split('\n\n') if out.startswith('    ' + WinUILanguage.get('Name'))]))
 
     @classmethod
     def get_connected_interfaces(cls) -> List['WiFiInterface']:
@@ -251,15 +268,15 @@ class WiFiAp:
             if ' : ' not in line:
                 continue
             value: str = line.split(' : ', maxsplit=1)[1].strip()
-            if line.startswith('SSID'):
+            if line.startswith(WinUILanguage.get('SSID')):
                 ssid = value
-            elif line.startswith('    Authentication'):
+            elif line.startswith('    ' + WinUILanguage.get('Authentication')):
                 auth = value
-            elif line.startswith('    Encryption'):
+            elif line.startswith('    ' + WinUILanguage.get('Encryption')):
                 encrypt = value
-            elif line.startswith('    BSSID'):
+            elif line.startswith('    ' + WinUILanguage.get('BSSID')):
                 bssid = value.lower()
-            elif line.startswith('         Signal'):
+            elif line.startswith('         ' + WinUILanguage.get('Signal')):
                 strength = int(value[:-1])
         return cls(ssid=ssid, auth=auth, encrypt=encrypt, bssid=bssid, strength=strength, raw_data=raw_data)
 
@@ -322,13 +339,13 @@ class WiFiInterface:
             if ' : ' not in line:
                 continue
             value: str = line.split(' : ', maxsplit=1)[1].strip()
-            if line.startswith('    Name'):
+            if line.startswith('    ' + WinUILanguage.get('Name')):
                 name = value
-            elif line.startswith('    State'):
+            elif line.startswith('    ' + WinUILanguage.get('State')):
                 state = value
-            elif line.startswith('    SSID'):
+            elif line.startswith('    ' + WinUILanguage.get('SSID')):
                 ssid = value
-            elif line.startswith('    BSSID'):
+            elif line.startswith('    ' + WinUILanguage.get('BSSID')):
                 bssid = value
 
         c: 'WiFiInterface' = cls(name=name, state=state)

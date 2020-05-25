@@ -47,13 +47,27 @@ def calculate_md5(file_path):
     return hashlib.md5(open(file_path, 'rb').read()).hexdigest()
 
 
-def apply_hotfix(package_name, package_file, site_packages_path=None):
+def apply_hotfix(package_name, package_file, site_packages_path=None, is_dir=False):
     if not site_packages_path:
         site_packages_path = get_package_file_path(package_name, package_file)
 
     package_file_path = os.path.join(site_packages_path, package_name, package_file)
     current_directory = os.path.dirname(os.path.abspath(__file__))
     hotfix_file_path = os.path.join(current_directory, 'hotfixes', package_name, package_file)
+
+    if is_dir:
+        try:
+            if not os.path.exists(package_file_path):
+                os.mkdir(package_file_path)
+        except FileExistsError:
+            pass
+        for file in os.listdir(hotfix_file_path):
+            if not os.path.isfile(file):
+                continue
+            shutil.copyfile(os.path.join(hotfix_file_path, file),
+                            os.path.join(package_file_path, file))
+        print(f'Hotfix for package directory "{package_name}" has been successfully applied')
+        return
 
     if calculate_md5(package_file_path) == calculate_md5(hotfix_file_path):
         print(f'Hotfix for package "{package_name}" has already been applied')
@@ -71,6 +85,7 @@ def main():
 
     apply_hotfix('win32wifi', 'Win32Wifi.py', site_packages_path)
     apply_hotfix('winwifi', 'main.py', site_packages_path)
+    apply_hotfix('winwifi', 'locale', site_packages_path, is_dir=True)
 
 
 if __name__ == '__main__':

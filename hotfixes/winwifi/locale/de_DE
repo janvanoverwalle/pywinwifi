@@ -1,0 +1,9 @@
+{
+  "ssid": "SSID",
+  "name": "Name",
+  "authentication": "Authentifizierung",
+  "encryption": "Verschlüsselung",
+  "bssid": "BSSIDD",
+  "signal": "Signal",
+  "state": "Status"
+}
