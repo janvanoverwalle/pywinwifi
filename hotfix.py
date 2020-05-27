@@ -62,7 +62,7 @@ def apply_hotfix(package_name, package_file, site_packages_path=None, is_dir=Fal
         except FileExistsError:
             pass
         for file in os.listdir(hotfix_file_path):
-            if not os.path.isfile(file):
+            if not os.path.isfile(os.path.join(hotfix_file_path, file)):
                 continue
             shutil.copyfile(os.path.join(hotfix_file_path, file),
                             os.path.join(package_file_path, file))

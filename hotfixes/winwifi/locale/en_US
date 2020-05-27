@@ -5,5 +5,7 @@
   "encryption": "Encryption",
   "bssid": "BSSID",
   "signal": "Signal",
-  "state": "State"
+  "state": "State",
+  "connected": "connected",
+  "disconnected": "disconnected"
 }

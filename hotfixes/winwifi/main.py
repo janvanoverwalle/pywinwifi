@@ -48,7 +48,7 @@ class WinUILanguage:
     @classmethod
     def detect(cls):
         lang = locale.windows_locale[windll.kernel32.GetUserDefaultUILanguage()]
-        cls._map = json.loads(pkgutil.get_data(__package__, os.path.join(locale, lang)).decode())
+        cls._map = json.loads(pkgutil.get_data(__package__, os.path.join('locale', lang)).decode())
 
     @classmethod
     def get(cls, key):
@@ -322,8 +322,8 @@ class WiFiAp:
 
 
 class WiFiConstant:
-    STATE_CONNECTED = 'connected'
-    STATE_DISCONNECTED = 'disconnected'
+    STATE_CONNECTED = WinUILanguage.get('connected')
+    STATE_DISCONNECTED = WinUILanguage.get('disconnected')
 
 
 class WiFiInterface:

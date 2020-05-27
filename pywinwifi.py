@@ -230,7 +230,7 @@ def _wlan_scan_interface(interface, timeout=10):
 
 def get_connected_ap():
     try:
-        return list(map(lambda i: i, WinWiFi.get_connected_interfaces()))
+        return list(WinWiFi.get_connected_interfaces())
     except:
         return []
 
@@ -433,7 +433,8 @@ def do_get_connected_ap(verbosity=0, **kwargs):
     Logger.info('Retrieving connected AP info')
     networks = get_connected_ap()
     if not networks:
-        s = {'State': 'disconnected'}
+        interfaces = WinWiFi.get_interfaces()
+        s = {'State': interfaces[0].state if interfaces else 'disconnected'}
         json_data = _to_json(s)
         Logger.info(f'JSON:{json_data}')
         if kwargs.get('json'):
