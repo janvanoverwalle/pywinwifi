@@ -51,10 +51,10 @@ class WinUILanguage:
         cls._map = json.loads(pkgutil.get_data(__package__, os.path.join('locale', lang)).decode())
 
     @classmethod
-    def get(cls, key):
+    def get(cls, key, value=None):
         if not cls._map:
             cls.detect()
-        return cls._map[key.lower()]
+        return cls._map.get(key.lower(), value)
 
 
 class WindllWlanApi:
@@ -114,7 +114,7 @@ class WinWiFi:
     def netsh(cls, args: List[str], timeout: int = 3, check: bool = True) -> subprocess.CompletedProcess:
         return subprocess.run(
                 ['netsh'] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                timeout=timeout, check=check, encoding=sys.stdout.encoding)
+                timeout=timeout, check=check, encoding=WinUILanguage.get('encoding', sys.stdout.encoding))
 
     @classmethod
     def get_profiles(cls, callback: Callable = lambda x: None) -> List[str]:
