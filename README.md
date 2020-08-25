@@ -11,52 +11,15 @@ Use `pip install -r requirements.txt` to install the required packages.
 
 ### Issues
 At time of writing (Mar 11, 2020), there are a couple of issues with the following packages that need to be resolved:
- - `win32wifi`: See this [pull request](https://github.com/kedos/win32wifi/pull/8) for more information.
- - `winwifi`: See [issue #5](https://github.com/changyuheng/winwifi.py/issues/5) and [issue #8](https://github.com/changyuheng/winwifi.py/issues/8) for more information.
+ - `win32wifi`:
+ 	* See this [pull request](https://github.com/kedos/win32wifi/pull/8) for more information.
+ - `winwifi`:
+ 	* [issue #5](https://github.com/changyuheng/winwifi.py/issues/5)
+	* [issue #8](https://github.com/changyuheng/winwifi.py/issues/8)
+	* No `netsh` support for non-English languages
 
 #### Hotfix
-Either execute `hotfix.bat` or follow the steps below for each of the packagaes.
-
-##### win32wifi
- 1. Go to your Python environment's `site-packages` folder and locate the `win32wifi` folder. Open `Win32Wifi.py`  in your preferred text editor and look for the class `WirelessNetworkBss`.
-
- 2. Add the following line to the class' `__init__` method, before the `__process_information_elements` methods.
-   - `self.ch_center_frequency = bss_entry.ChCenterFrequency`
-
- 3. Next go to the same class' `__process_information_elements` method and edit the following lines:
-   - Change the `raw_information_elements` instantiation from empty string to empty list.\
-   i.e. `self.raw_information_elements = []`
-   - Change the `raw_information_elements` string concatenation of bytes to an append.\
-   i.e. `self.raw_information_elements.append(byte)`
-
-##### winwifi
- 1. Go to your Python environment's `site-packages` folder and locate the `winwifi` folder. Open `main.py`  in your preferred text editor and look for the class `WinWiFi`.
-
- 2. In the `gen_profile` method, after the `profile: str = cls.get_profile_template()` line, add the following code-block:
-	```
-	# (invalid_char, replace_by)
-	invalid_chars = [
-	    ('&', '&amp;'),  # Has to be checked first
-	    ('"', '&quot;'),
-	    ('\'', '&apos;'),
-	    ('<', '&lt;'),
-	    ('>', '&gt;')
-	]
-	for invalid_char in invalid_chars:
-	    if invalid_char[0] in ssid:
-	        ssid = ssid.replace(invalid_char[0], invalid_char[1])
-	```
- 3. In the same method add an `else` for the `if not passwd` statement with the following code-block:
-	```
-	profile = profile.replace('{passwd}', passwd)
-	if auth.upper() == 'WPA2-PERSONAL':
-	    auth = 'WPA2PSK'
-	profile = profile.replace('{auth}', auth)
-	if encrypt.upper() == 'CCMP':
-	    encrypt = 'AES'
-	profile = profile.replace('{encrypt}', encrypt)
-	```
- 4.  Next, in the same class' `connect` method, comment out the first line `if not passwd:` (and correct the indentation for the rest of the method's body).
+Execute `hotfix.bat` (or `python hotfix.py`) to fix the above mentioned issues from an elevated command prompt.
 
 ## Execution
 Run `python pywinwifi.py ?` in a terminal to get started.
